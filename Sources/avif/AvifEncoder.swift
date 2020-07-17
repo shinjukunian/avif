@@ -25,20 +25,18 @@ public class AvifEncoder{
         return versions
     }
     
-    let url:URL
-    
     
     lazy var  output: avifRWData = avifRWData()
     
     let encoder = avifEncoderCreate()
     let timeScale = 1000 //ms
     
-    public init(url:URL) {
-        self.url=url
+    public init() {
         self.encoder?.pointee.timescale=UInt64(timeScale)
+        self.encoder?.pointee.maxThreads=4
     }
     
-    func add(image:CGImage, duration:TimeInterval) throws{
+    public func add(image:CGImage, duration:TimeInterval, isSingle:Bool = false) throws{
         let width=image.width
         let height=image.height
         let bitsPerPixel=image.bitsPerPixel
@@ -70,7 +68,16 @@ public class AvifEncoder{
             avifRGB.pixels=buffer
             avifImageRGBToYUV(avifImage, &avifRGB)
         })
-        let result=avifEncoderAddImage(encoder, avifImage, UInt64(duration * Double(timeScale)), AVIF_ADD_IMAGE_FLAG_NONE.rawValue)
+        
+        let flags:avifAddImageFlags
+        if isSingle{
+            flags = AVIF_ADD_IMAGE_FLAG_SINGLE
+        }
+        else{
+            flags = AVIF_ADD_IMAGE_FLAG_NONE
+        }
+        
+        let result=avifEncoderAddImage(encoder, avifImage, UInt64(duration * Double(timeScale)), flags.rawValue)
         guard result == AVIF_RESULT_OK else{
             throw AvifEncoderError.imageEncoding(avifError: Int(result.rawValue))
         }
@@ -78,16 +85,19 @@ public class AvifEncoder{
         avifImageDestroy(avifImage)
     }
     
-    func encode() throws{
+    public func encode() throws -> Data{
         let result=avifEncoderFinish(encoder, &output)
         guard result == AVIF_RESULT_OK else{
             throw AvifEncoderError.imageWriting(avifError: Int(result.rawValue))
         }
         let data=Data(bytes: output.data, count: output.size)
-        try data.write(to: self.url)
         avifRWDataFree(&output)
+        return data
     }
     
+    public func encode(to url:URL) throws{
+        try self.encode().write(to: url)
+    }
     
     deinit {
         avifEncoderDestroy(encoder)
@@ -95,4 +105,13 @@ public class AvifEncoder{
     }
     
     
+}
+
+
+public extension CGImage{
+    var avifData:Data?{
+        let encoder=AvifEncoder()
+        try? encoder.add(image: self, duration: 1, isSingle: true)
+        return try? encoder.encode()
+    }
 }

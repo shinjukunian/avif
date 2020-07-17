@@ -95,11 +95,13 @@ public class AvifDecoder{
             avifImageYUVToRGB(&image, &rgb)
             
             defer{
-                avifRGBImageFreePixels(&rgb)
+                 avifRGBImageFreePixels(&rgb)
             }
             
             let info=CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedFirst.rawValue)
-            guard let provider=CGDataProvider(dataInfo: nil, data: rgb.pixels, size: Int(rgb.rowBytes * rgb.height), releaseData: {_,_,_ in}),
+            let rgbData=Data(bytes: rgb.pixels, count: Int(rgb.rowBytes * rgb.height))
+            
+            guard let provider=CGDataProvider(data: rgbData as CFData),
                 let cgImage=CGImage(width: Int(width), height: Int(height), bitsPerComponent: Int(rgb.depth), bitsPerPixel: Int(rgb.depth) * 4, bytesPerRow: Int(rgb.rowBytes), space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: info, provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
             else {break}
             

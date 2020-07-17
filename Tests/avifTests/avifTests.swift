@@ -9,15 +9,14 @@ final class avifTests: XCTestCase {
     lazy var imageURLS:[URL]={
         let currentURL=URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
         let imageURL=currentURL.appendingPathComponent("Resources", isDirectory: true).appendingPathComponent("testData", isDirectory: true)
-           let imageURLs=try! FileManager.default.contentsOfDirectory(at: imageURL, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])
+        let imageURLs=try? FileManager.default.contentsOfDirectory(at: imageURL, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])
                .sorted(by: {u1,u2 in
                    return u1.lastPathComponent.compare(u2.lastPathComponent, options:[.numeric]) == .orderedAscending
-                   
-               })
-           
-        XCTAssertGreaterThan(imageURLs.count, 1, "insufficient images loaded")
+            })
+        XCTAssertNotNil(imageURLs, "no images loaded")
+        XCTAssertGreaterThan(imageURLs?.count ?? 0, 1, "insufficient images loaded")
 
-        return imageURLs
+        return imageURLs!
     }()
     
 
@@ -111,12 +110,12 @@ final class avifTests: XCTestCase {
         })
         
         XCTAssertEqual(images.count, self.imageURLS.count)
-        let encoder=AvifEncoder(url: self.outURL)
+        let encoder=AvifEncoder()
         do{
             for image in images{
                 try encoder.add(image: image, duration: 0.1)
             }
-            try encoder.encode()
+            try encoder.encode(to: self.outURL)
             try FileManager.default.removeItem(at: self.outURL)
         }
         catch let error{
@@ -135,12 +134,12 @@ final class avifTests: XCTestCase {
         
         XCTAssertEqual(images.count, self.imageURLS.count)
         
-        let encoder=AvifEncoder(url: self.roundTripURL)
+        let encoder=AvifEncoder()
         do{
             for image in images{
                 try encoder.add(image: image, duration: 0.1)
             }
-            try encoder.encode()
+            try encoder.encode(to: self.roundTripURL)
             
             let decoder=try AvifDecoder(url: self.roundTripURL)
             let readImages=try decoder.readImages()
@@ -157,6 +156,55 @@ final class avifTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
     }
+    
+    
+    func testSingle(){
+        guard let image=self.imageURLS.compactMap({url->CGImage? in
+         guard let source=CGImageSourceCreateWithURL(url as CFURL, nil) else{return nil}
+             XCTAssert(CGImageSourceGetCount(source) == 1, "Image Source has image count too high")
+             return CGImageSourceCreateImageAtIndex(source, 0, nil)
+        }).first else{
+            XCTFail()
+            return
+        }
+        do{
+            let encoder=AvifEncoder()
+            try encoder.add(image: image, duration: 1, isSingle: true)
+            let data=try encoder.encode()
+            XCTAssert(data.isEmpty == false)
+        }
+        catch let error{
+            XCTFail(error.localizedDescription)
+        }
+    }
+    
+    func testSingleRoundTrip(){
+        guard let image=self.imageURLS.compactMap({url->CGImage? in
+         guard let source=CGImageSourceCreateWithURL(url as CFURL, nil) else{return nil}
+             XCTAssert(CGImageSourceGetCount(source) == 1, "Image Source has image count too high")
+             return CGImageSourceCreateImageAtIndex(source, 0, nil)
+        }).last else{
+            XCTFail()
+            return
+        }
+        do{
+            guard let data=image.avifData else{
+                XCTFail()
+                return
+            }
+            try data.write(to: self.outURL)
+            let decoder=try AvifDecoder(url: self.outURL)
+            let images=try decoder.readImages()
+            XCTAssert(images.count == 1)
+            XCTAssert(images[0].image.width == image.width)
+            
+            try FileManager.default.removeItem(at: self.outURL)
+        }
+        catch let error{
+            XCTFail(error.localizedDescription)
+        }
+    }
+    
 
     static var allTests = [
         ("testVersion", testVersion),
