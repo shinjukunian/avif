@@ -1,0 +1,9 @@
+module Clibavif {
+    umbrella header "shim.h"
+    export *
+    link "aom"
+    link "avif"
+    link "jpeg"
+    link "png"
+    link "z"
+}

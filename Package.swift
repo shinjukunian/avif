@@ -20,7 +20,10 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "avif",
-            dependencies: []),
+            dependencies: ["Clibavif"]),
+        
+        .target(name: "Clibavif", dependencies: [], path: nil, exclude: [], sources: nil, publicHeadersPath: nil, cSettings: nil, cxxSettings: nil, swiftSettings: nil, linkerSettings: [.unsafeFlags(["-L./Sources/Clibavif/lib"])]),
+        
         .testTarget(
             name: "avifTests",
             dependencies: ["avif"]),
