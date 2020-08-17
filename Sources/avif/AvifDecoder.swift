@@ -11,9 +11,9 @@ import Clibavif
 public class AvifDecoder{
     
     public struct AvifImage{
-        let image:CGImage
-        let presentationTime:TimeInterval
-        let duration:TimeInterval
+        public let image:CGImage
+        public let presentationTime:TimeInterval
+        public let duration:TimeInterval
     }
     
     
