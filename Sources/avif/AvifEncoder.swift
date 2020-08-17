@@ -7,6 +7,7 @@
 
 import Foundation
 import Clibavif
+import CoreGraphics
 
 public class AvifEncoder{
     

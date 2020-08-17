@@ -1,11 +1,12 @@
-// swift-tools-version:5.2
+// swift-tools-version:5.3
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
     name: "avif",
-    platforms: [.macOS(.v10_13)],
+    platforms: [.macOS(.v10_13), .iOS(.v12)],
+    
     products: [
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
         .library(
@@ -23,7 +24,8 @@ let package = Package(
             name: "avif",
             dependencies: ["Clibavif"]),
         
-        .target(name: "Clibavif", dependencies: [], path: nil, exclude: [], sources: nil, publicHeadersPath: nil, cSettings: nil, cxxSettings: nil, swiftSettings: nil, linkerSettings: [.unsafeFlags(["-L/Users/morten/Desktop/xcode/avif/Sources/Clibavif/lib"])]),
+        .binaryTarget(name: "Clibavif",
+                      path: "Sources/Clibavif/Clibavif.xcframework"),
         
         .testTarget(
             name: "avifTests",
