@@ -32,8 +32,6 @@ public class AvifDecoder{
     
     var avifData:avifRWData
     
-    
-    
     public init(url:URL)throws {
         self.url=url
         
@@ -67,8 +65,8 @@ public class AvifDecoder{
     
     public func readImages() throws -> [AvifImage]{
         
-        var roData = unsafeBitCast(self.avifData, to: avifROData.self)
-        let result=avifDecoderParse(decoder, &roData)
+        avifDecoderSetIOMemory(decoder, self.avifData.data, self.avifData.size)
+        let result=avifDecoderParse(decoder)
         guard result == AVIF_RESULT_OK, let dd=decoder?.pointee else {
             throw AvifDecoderError.fileParsing
         }
@@ -105,9 +103,6 @@ public class AvifDecoder{
             guard let provider=CGDataProvider(data: rgbData as CFData),
                 let cgImage=CGImage(width: Int(width), height: Int(height), bitsPerComponent: Int(rgb.depth), bitsPerPixel: Int(rgb.depth) * 4, bytesPerRow: Int(rgb.rowBytes), space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: info, provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
             else {break}
-            
-            
-            
             
             let presentationTime=timing.pts
             let duration=timing.duration

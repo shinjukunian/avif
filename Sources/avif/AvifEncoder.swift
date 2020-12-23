@@ -34,7 +34,7 @@ public class AvifEncoder{
     
     public init() {
         self.encoder?.pointee.timescale=UInt64(timeScale)
-        self.encoder?.pointee.maxThreads=4
+        self.encoder?.pointee.maxThreads=Int32(ProcessInfo().processorCount)
     }
     
     public func add(image:CGImage, duration:TimeInterval, isSingle:Bool = false) throws{
@@ -48,8 +48,8 @@ public class AvifEncoder{
         guard let context=CGContext(data: &cgImageBuffer, width: width, height: height, bitsPerComponent: image.bitsPerComponent, bytesPerRow: image.bytesPerRow, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: info.rawValue)
             else {
             throw AvifEncoderError.contextCreation
-            
         }
+        
         context.draw(image, in: CGRect(origin: .zero, size: CGSize(width: width, height: height)))
         let avifImage=avifImageCreate(Int32(width), Int32(height), Int32(depth), AVIF_PIXEL_FORMAT_YUV420)
         avifImage?.pointee.colorPrimaries=AVIF_COLOR_PRIMARIES_BT709
