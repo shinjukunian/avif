@@ -22,10 +22,17 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "avif",
-            dependencies: ["Clibavif"]),
+            dependencies: ["Clibavif_shim"]),
+        
+//        .binaryTarget(name: "Clibavif",
+//                      path: "Sources/Clibavif/Clibavif.xcframework"),
         
         .binaryTarget(name: "Clibavif",
-                      path: "Sources/Clibavif/Clibavif.xcframework"),
+                      url: "https://dl.bintray.com/shinjukunian/Clibavif/Clibavif.xcframework.zip",
+                      checksum: "7577d83bb4b6873fe4661c62a5cfb2ecdba3810e7f5b70755d5e7ffeea8eeb08"),
+        
+        //this is a bit of an awkward workaround to build a swift module - one could try to include a modulemap in the .xcframework but it is not entirely clear where that would go in the framework structure. 
+        .target(name: "Clibavif_shim", dependencies: ["Clibavif"], path: nil, exclude: [String](), sources: nil, resources: nil, publicHeadersPath: nil, cSettings: nil, cxxSettings: nil, swiftSettings: nil, linkerSettings: nil),
         
         .testTarget(
             name: "avifTests",

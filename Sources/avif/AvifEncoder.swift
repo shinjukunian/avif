@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Clibavif
+import Clibavif_shim
 import CoreGraphics
 
 public class AvifEncoder{
